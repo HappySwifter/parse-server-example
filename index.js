@@ -19,7 +19,7 @@ const config = {
   cloud: process.env.CLOUD_CODE_MAIN || __dirname + '/cloud/main.js',
   appId: process.env.APP_ID,
   masterKey: process.env.MASTER_KEY,
-  serverURL: process.env.SERVER_URL', // Don't forget to change to https if needed
+  serverURL: process.env.SERVER_URL, // Don't forget to change to https if needed
   liveQuery: {
     classNames: ['Posts', 'Comments'], // List of classes to support for query subscriptions
   },
