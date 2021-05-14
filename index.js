@@ -11,6 +11,8 @@ const databaseUri = process.env.DATABASE_URI || process.env.MONGODB_URI;
 
 if (!databaseUri) {
  console.log('DATABASE_URI not specified, falling back to localhost.');
+} else {
+  console.log('Got database URL from ENV!');
 }
 const config = {
   databaseURI: databaseUri,
