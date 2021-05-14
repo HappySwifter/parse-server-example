@@ -7,7 +7,7 @@ const path = require('path');
 const args = process.argv || [];
 const test = args.some(arg => arg.includes('jasmine'));
 
-const databaseUri = process.env.DATABASE_URI || process.env.MONGODB_URI;
+//const databaseUri = process.env.DATABASE_URI || process.env.MONGODB_URI;
 
 if (!databaseUri) {
   console.log('DATABASE_URI not specified, falling back to localhost.');
@@ -15,8 +15,8 @@ if (!databaseUri) {
 const config = {
   databaseURI: 'mongodb://ecouser:YjRmZmZhMjA5MzdjNm_9@cluster0-shard-00-00.jtcjr.mongodb.net:27017,cluster0-shard-00-01.jtcjr.mongodb.net:27017,cluster0-shard-00-02.jtcjr.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-hpdlct-shard-0&authSource=admin&retryWrites=true&w=majority',
   cloud: process.env.CLOUD_CODE_MAIN || __dirname + '/cloud/main.js',
-  appId: process.env.APP_ID || 'ecoapp',
-  masterKey: process.env.MASTER_KEY || 'MTdmNzRiMmY3MmNiMT_9', //Add your master key here. Keep it secret!
+  appId: 'ecoapp',
+  masterKey: 'MTdmNzRiMmY3MmNiMT_9',
   serverURL: process.env.SERVER_URL || 'http://localhost:1337/parse', // Don't forget to change to https if needed
   liveQuery: {
     classNames: ['Posts', 'Comments'], // List of classes to support for query subscriptions
