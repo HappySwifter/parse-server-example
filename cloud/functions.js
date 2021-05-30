@@ -12,3 +12,11 @@ Parse.Cloud.define('asyncFunction', async req => {
 Parse.Cloud.beforeSave('Test', () => {
   throw new Parse.Error(9001, 'Saving test objects is not available.');
 });
+
+Parse.Cloud.beforeSave('HabitFact', function(req, res) {
+  var acl = new Parse.ACL();
+  acl.setReadAccess(req.user, true);
+  acl.setWriteAccess(req.user, false);
+  req.object.setACL(acl);
+  res.success();
+});
