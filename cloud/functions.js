@@ -18,5 +18,4 @@ Parse.Cloud.beforeSave('HabitFact', function(req, res) {
   acl.setReadAccess(req.user, true);
   acl.setWriteAccess(req.user, false);
   req.object.setACL(acl);
-  res.success();
 });
