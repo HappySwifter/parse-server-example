@@ -17,9 +17,9 @@ Parse.Cloud.beforeSave('HabitFact', function(req, res) {
   var acl = new Parse.ACL();
   acl.setReadAccess(req.user, true);
   acl.setWriteAccess(req.user, false);
-  acl.publicRead = false
-  acl.publicWrite = false
-  acl.setRoleWriteAccess("adminRole", true)
-  acl.setRoleReadAccess("adminRole", true)
+  acl.publicRead = true;
+  acl.publicWrite = false;
+  acl.setRoleWriteAccess("adminRole", true);
+  acl.setRoleReadAccess("adminRole", true);
   req.object.setACL(acl);
 });
