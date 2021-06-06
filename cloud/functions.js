@@ -23,3 +23,8 @@ Parse.Cloud.beforeSave('HabitFact', function(req, res) {
   acl.setRoleReadAccess("adminRole", true);
   req.object.setACL(acl);
 });
+
+Parse.Cloud.define('addToChecklist', req => {
+  req.log.info(req);
+  return 'Hi';
+});
