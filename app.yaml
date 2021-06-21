@@ -2,12 +2,7 @@ runtime: nodejs
 env: flex
 
 env_variables:
-  # --REQUIRED--
-  # DATABASE_URI:
-  # APP_ID:
-  # MASTER_KEY:
-  # SERVER_URL:
-  # --OPTIONAL--
-  # FILE_KEY: <your-file-key>
-  # PARSE_MOUNT: /parse
-  # CLOUD_CODE_MAIN:
+  DATABASE_URI:mongodb://ecouser:rV9WGTlFl7hlghak@cluster0-shard-00-00.jtcjr.mongodb.net:27017,cluster0-shard-00-01.jtcjr.mongodb.net:27017,cluster0-shard-00-0$
+  APP_ID:ecoapp
+  MASTER_KEY:ZDE3YTgwMzliYzEyN2_9
+  SERVER_URL:http://ecobalance.life:1337/parse
