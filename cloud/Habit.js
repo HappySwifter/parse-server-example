@@ -1,37 +1,46 @@
-Parse.Cloud.define('getHabits',  (req) => {
+Parse.Cloud.define('getHabits', async (req) => {
+    if (req.user === undefined) {
+        return await getHabitsForUnauthorisedUser()
+    } else {
+        return await getHabitsForUser(req.user.id)
+    }
+})
+
+async function getHabitsForUnauthorisedUser() {
+    console.time('fetch habits');
+    const habitQuery = new Parse.Query('Habit');
+    return await habitQuery.find({ useMasterKey: true }).then( facts => {
+        console.timeEnd('fetch habits');
+        return facts
+    }).catch( error => {
+        throw error
+    });
+}
+
+async function getHabitsForUser(userId) {
     console.time('fetch habits');
     const pipeline = [
         {
             lookup: {
                 from: 'Checklist',
-                let: {
-                    'habitId': '$_id'
-                },
+                let: { 'habitId': '$_id' }, // определяем локальную переменную
                 pipeline: [
-                    {
-                        '$addFields': {
-                            'isLiked': true
+                    { '$addFields': { 'isLiked': true } }, // добавляем новое поле в объект checklist, чтобы потом его вернуть
+                    { '$project': {
+                            'foreignHabit': { $substr: ["$_p_habit", 6, -1] }, // у чеклиста у поля _p_habit обрезаем ненужные символы и переименовываем его в foreignHabit
+                            'isLiked': 1, // оставляем поле isLiked для показа
+                            'user': { $substr: ["$_p_user", 6, -1] }
                         }
                     },
-                    {
-                        $project:
-                          {
-                              'foreignHabit': { $substr: ["$_p_habit", 6, -1] },
-                              'isLiked': 1
-                          }
-                    },
-                    {
-                        '$match': { '$expr': { '$eq': ['$foreignHabit', '$$habitId'] } }
-                    },
-                    {
-                        '$limit': 1
-                    },
-                    {
-                        '$project': {
-                            '_id': 0,
-                            'isLiked': 1
+                    { '$match': {
+                            '$and': [ // фильтр AND
+                                {'$expr': { '$eq': ['$$habitId', '$foreignHabit'] }}, // фильтр привычка чеклиста == привычке
+                                {'$expr': { '$eq': [userId, '$user'] }} // фильтр юзер равен заданному
+                            ]
                         }
-                    }
+                    },
+                    { '$limit': 1 }, // возвращаем только одно значение
+                    { '$project': { '_id': 0, 'isLiked': 1 } } // оставляем только поле isLiked
                 ],
                 as: 'checklist'
             }
@@ -39,68 +48,48 @@ Parse.Cloud.define('getHabits',  (req) => {
         {
             lookup: {
                 from: 'HabitFact',
-                // localField: '_id',
-                // foreignField: 'habId',
-                let: {
-                    'habitId': '$_id'
-                },
+                let: { 'habitId': '$_id' },
                 pipeline: [
-                    {
-                        $project:
-                          {
+                    { '$project': {
                               'foreignHabit': { $substr: ["$_p_habit", 6, -1] },
-                              'lastFactDate': "$_created_at"
+                              'lastFactDate': "$_created_at",
+                              'user': { $substr: ["$_p_user", 6, -1] }
                           }
                     },
-                    {
-                        '$match':
-                          {
-                              '$expr': { '$eq': ['$$habitId', '$foreignHabit'] }
-                          }
-                    },
-                    {
-                        '$sort': {  'lastFactDate': -1 }
-                    },
-                    {
-                        '$limit': 1
-                    },
-
-                    {
-                        '$project': {
-                            '_id': 0,
-                            'lastFactDate': 1
+                    { '$match': {
+                            '$and': [
+                                {'$expr': { '$eq': ['$$habitId', '$foreignHabit'] }},
+                                {'$expr': { '$eq': [userId, '$user'] }}
+                            ]
                         }
-                    }
+                    },
+                    { '$sort': {  'lastFactDate': -1 } },
+                    { '$limit': 1 },
+                    { '$project': { '_id': 0, 'lastFactDate': 1 } }
                 ],
                 as: 'facts'
             }
         },
         {
-            replaceRoot: {
-                newRoot: {
+            // из массивов объектов $checklist и $facts берем первые элементы и объединяем поля этих объектов с родителем
+            replaceRoot: { newRoot: {
                     $mergeObjects: [ { $arrayElemAt: [ "$checklist", 0 ] },  { $arrayElemAt: [ "$facts", 0 ] }, "$$ROOT" ]  }
             }
         },
-        {
-            project: {
-                checklist: 0,
-                facts: 0
-            }
-        }
+        { project: { checklist: 0, facts: 0 } }
     ]
 
     const query = new Parse.Query("Habit");
-    return query.aggregate(pipeline, { userMasterKey: true })
+    return await query.aggregate(pipeline, { userMasterKey: true })
       .then( results => {
-          console.log("res", results);
+          // console.log("res", results);
           console.timeEnd('fetch habits');
           return results
       })
       .catch( error => {
           throw error
       });
-})
-
+}
 // Parse.Cloud.afterFind('Habit', async req => {
 
   // const checklistQuery = new Parse.Query("Checklist");

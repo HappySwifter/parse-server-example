@@ -137,7 +137,7 @@ Parse.Cloud.define('removeFromChecklist', async req => {
   console.log('-->> удаляем привычку из избранного: ', result);
   return await result.destroy({ useMasterKey: true }).then((checklist) => {
     req.log.info('-->> Like deleted');
-    habit["isLiked"] = false;
+    // habit["isLiked"] = false;
     return habit;
   }, (error) => {
     console.log('Failed to delete object, with error code: ' + error.message);

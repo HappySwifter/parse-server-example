@@ -32,7 +32,6 @@ function getFactACL(user) {
  * 2. Создает факт
  * 3. Устанавливает прва на факт
  * 4. Прибавляет к значению поля point у юзера поинты, которые указаны в привычке
- * 5. TODO у привычки указать время последнего факта
  */
 Parse.Cloud.define('createFact', async (req) => {
     let habit = await fetchHabit(req.params.habit.objectId)
@@ -40,7 +39,6 @@ Parse.Cloud.define('createFact', async (req) => {
     if ((facts.length === 0) || (facts.length > 0) && canCreate(facts[0].createdAt, habit.get("frequency"))) {
         let fact = await saveFact(habit, req.user)
         await updateUserPoints(fact.get("points"), req.user)
-        // await updateChecklist(fact, req.user)
     } else {
         throw 'Нельзя выполнить привычку, нужно немного подождать'
     }
