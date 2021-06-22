@@ -1,4 +1,4 @@
-const habitTools = require('./Habit.js');
+const habitTools = require('./Habit/Habit.js');
 
 // Parse.Cloud.afterFind('Checklist', async req => {
 //   console.time("afterFindChecklistQuery");

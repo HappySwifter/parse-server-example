@@ -1,33 +1,4 @@
-const habitTools = require('./Habit.js');
-
-
-/**
- * Добавляет кол-во дней к дате
- * @param date дата, к оторой нужно прибавить дни
- * @param days кол-во дней, которое нужно прибавить
- * @returns {Date} обновленная дата
- */
-function addDays(date, days) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
-/**
- * Получить ACL для факта по переданному юзеру
- * @param {Parse.User} user юзер для настройки прав
- * @returns {Parse.ACL}  ACL
- */
-function getFactACL(user) {
-    const acl = new Parse.ACL();
-    acl.setReadAccess(user, true);
-    acl.setWriteAccess(user, true);
-    acl.publicRead = false;
-    acl.publicWrite = false;
-    acl.setRoleWriteAccess('adminRole', true);
-    acl.setRoleReadAccess('adminRole', true);
-    return acl;
-}
+const habitTools = require('./Habit/Habit.js');
 
 /**
  * Создать новый факт.
@@ -59,6 +30,34 @@ Parse.Cloud.define('createFact', async (req) => {
         }
     }
 });
+
+/**
+ * Добавляет кол-во дней к дате
+ * @param date дата, к оторой нужно прибавить дни
+ * @param days кол-во дней, которое нужно прибавить
+ * @returns {Date} обновленная дата
+ */
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
+/**
+ * Получить ACL для факта по переданному юзеру
+ * @param {Parse.User} user юзер для настройки прав
+ * @returns {Parse.ACL}  ACL
+ */
+function getFactACL(user) {
+    const acl = new Parse.ACL();
+    acl.setReadAccess(user, true);
+    acl.setWriteAccess(user, true);
+    acl.publicRead = false;
+    acl.publicWrite = false;
+    acl.setRoleWriteAccess('adminRole', true);
+    acl.setRoleReadAccess('adminRole', true);
+    return acl;
+}
 
 /**
  * Возвращает факт по ссылке

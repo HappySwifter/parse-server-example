@@ -1,3 +1,42 @@
+module.exports = { userHasRole }
+
+Parse.Cloud.define('isAdmin', async function(request, response){
+    console.log(request)
+    if (!request.user) {
+        throw 'Request did not have an authenticated user attached with it';
+    }
+    else {
+        return await userHasRole(request.user.id, 'adminRole')
+          .then(function(hasRole) {
+                return !!hasRole;
+            },
+            function(error){
+                throw error
+            });
+    }
+});
+
+async function userHasRole(userId, roleName) {
+    const queryRole = new Parse.Query(Parse.Role);
+    queryRole.equalTo('name', roleName);
+    return await queryRole.first({useMasterKey:true})
+      .then(function(roleObject){
+          const queryForUsername = roleObject.relation('users').query();
+          queryForUsername.equalTo('objectId', userId)
+          return queryForUsername.first({useMasterKey:true})
+            .then(function(userObject){
+                if(userObject){
+                    console.log(userId + ' has role: ' + roleName);
+                    return true
+                }
+                else{
+                    console.log(userId + ' does not have role: ' + roleName);
+                    return false
+                }
+            });
+      });
+}
+
 // Parse.Cloud.define('addNoteRating', function(request, response) {
 //   Objects.save(null, {
 //     useMasterKey: true,
