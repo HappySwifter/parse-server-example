@@ -1,3 +1,6 @@
+const habitTools = require('./Habit.js');
+
+
 /**
  * Добавляет кол-во дней к дате
  * @param date дата, к оторой нужно прибавить дни
@@ -32,13 +35,20 @@ function getFactACL(user) {
  * 2. Создает факт
  * 3. Устанавливает прва на факт
  * 4. Прибавляет к значению поля point у юзера поинты, которые указаны в привычке
+ * 5. Делает aggregate запрос привычки (с лайком и датой факта) и отпавляем ее клиенту
  */
 Parse.Cloud.define('createFact', async (req) => {
+    console.time("Parse.Cloud -> createFact")
     let habit = await fetchHabit(req.params.habit.objectId)
     let facts = await findFacts(req.user, habit)
     if ((facts.length === 0) || (facts.length > 0) && canCreate(facts[0].createdAt, habit.get("frequency"))) {
         let fact = await saveFact(habit, req.user)
         await updateUserPoints(fact.get("points"), req.user)
+
+        const habitQuery = habitTools.constructHabitQuery(req.params.habit.objectId)
+        const habits = await habitTools.getHabitsForUser(req.user.id, habitQuery)
+        console.timeEnd("Parse.Cloud -> createFact")
+        return habits[0]
     } else {
         throw 'Нельзя выполнить привычку, нужно немного подождать'
     }

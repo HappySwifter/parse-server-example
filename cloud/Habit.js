@@ -1,23 +1,44 @@
+module.exports = { getHabitsForUser, constructHabitQuery };
+
 Parse.Cloud.define('getHabits', async (req) => {
+    const habitId = req.params.habitId
+    const query = constructHabitQuery(habitId)
     if (req.user === undefined) {
-        return await getHabitsForUnauthorisedUser()
+        return await getHabitsForUnauthorisedUser(query)
     } else {
-        return await getHabitsForUser(req.user.id)
+        return await getHabitsForUser(req.user.id, query)
+    }
+}, {
+    fields: {
+        habitId: {
+            required: false
+        }
     }
 })
 
-async function getHabitsForUnauthorisedUser() {
-    console.time('fetch habits');
-    const habitQuery = new Parse.Query('Habit');
-    return await habitQuery.find({ useMasterKey: true }).then( facts => {
-        console.timeEnd('fetch habits');
+function constructHabitQuery(habitId) {
+    const query = new Parse.Query("Habit");
+
+    if (habitId !== undefined) {
+        console.log("Query: fetch habit with id", habitId)
+        query.equalTo("objectId", habitId);
+    } else {
+        console.log("Query: fetch all habits")
+    }
+    return query
+}
+
+async function getHabitsForUnauthorisedUser(query) {
+    console.time('fetch habits no user');
+    return await query.find({ useMasterKey: true }).then( facts => {
+        console.timeEnd('fetch habits no user');
         return facts
     }).catch( error => {
         throw error
     });
 }
 
-async function getHabitsForUser(userId) {
+async function getHabitsForUser(userId, query) {
     console.time('fetch habits');
     const pipeline = [
         {
@@ -79,7 +100,7 @@ async function getHabitsForUser(userId) {
         { project: { checklist: 0, facts: 0 } }
     ]
 
-    const query = new Parse.Query("Habit");
+
     return await query.aggregate(pipeline, { userMasterKey: true })
       .then( results => {
           // console.log("res", results);
