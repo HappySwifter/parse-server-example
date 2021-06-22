@@ -29,6 +29,7 @@ function constructHabitQuery(habitId) {
 }
 
 async function getHabitsForUnauthorisedUser(query) {
+    query.limit(1000)
     console.time('fetch habits no user');
     return await query.find({ useMasterKey: true }).then( facts => {
         console.timeEnd('fetch habits no user');
