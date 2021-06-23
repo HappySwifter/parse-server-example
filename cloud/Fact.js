@@ -28,7 +28,8 @@ Parse.Cloud.define('createFact', async (req) => {
         habit: {
             required: true
         }
-    }
+    },
+    requireUser: true
 });
 
 /**
