@@ -11,7 +11,7 @@ const habitTools = require('./Habit/Habit.js');
 Parse.Cloud.define('createFact', async (req) => {
     console.time("Parse.Cloud -> createFact")
     let habit = await fetchHabit(req.params.habit.objectId)
-    let facts = await findFacts(req.user, habit)
+    let facts = await findLastFact(req.user, habit)
     if ((facts.length === 0) || (facts.length > 0) && canCreate(facts[0].createdAt, habit.get("frequency"))) {
         let fact = await saveFact(habit, req.user)
         await updateUserPoints(fact.get("points"), req.user)
@@ -21,7 +21,7 @@ Parse.Cloud.define('createFact', async (req) => {
         console.timeEnd("Parse.Cloud -> createFact")
         return habits[0]
     } else {
-        throw 'Нельзя выполнить привычку, нужно немного подождать'
+        throw 'Завтра эту привычку можно будет отметить снова'
     }
 }, {
     fields: {
@@ -78,7 +78,7 @@ async function fetchHabit(habitId) {
     });
 }
 
-async function findFacts(user, habit) {
+async function findLastFact(user, habit) {
     const habitFactQuery = new Parse.Query('HabitFact');
     habitFactQuery.equalTo('user', user);
     habitFactQuery.equalTo('habit', habit);
@@ -98,16 +98,26 @@ async function findFacts(user, habit) {
  * @returns {boolean} можно ли создать новую привычку
  */
 function canCreate(createdAt, freq) {
+    const currentDate = new Date()
     console.log('-->> fact.createdAt', createdAt);
-    let currentDate = new Date();
-    console.log('-->> comparing', currentDate, '>', addDays(createdAt, freq));
-    if (currentDate > addDays(createdAt, freq)) {
-        console.log('-->> can create');
-        return true;
-    } else {
+    console.log('-->> current time', currentDate);
+    if (isToday(createdAt, currentDate)) {
         console.log('-->> can\'t create');
         return false;
+    } else {
+        console.log('-->> can create');
+        return true;
     }
+
+    // let currentDate = new Date();
+    // console.log('-->> comparing', currentDate, '>', addDays(createdAt, freq));
+    // if (currentDate > addDays(createdAt, freq)) {
+    //     console.log('-->> can create');
+    //     return true;
+    // } else {
+    //     console.log('-->> can\'t create');
+    //     return false;
+    // }
 }
 
 /**
@@ -146,6 +156,12 @@ async function updateUserPoints(points, user) {
     user.set('points', totalPoints);
     await user.save(null, { useMasterKey: true });
     console.timeEnd('updateUserPoints');
+}
+
+function isToday(date, currentDate) {
+    return date.getDate() === currentDate.getDate() &&
+      date.getMonth() === currentDate.getMonth() &&
+      date.getFullYear() === currentDate.getFullYear();
 }
 
 // async function updateChecklist(habitFact, user) {

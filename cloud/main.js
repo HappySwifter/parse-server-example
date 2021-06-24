@@ -4,5 +4,5 @@ require('./functions.js');
 require('./Habit/Habit.js');
 require('./Habit/BeforeSaveHabit.js');
 
-require('./like.js');
+require('./Like/like.js');
 require('./Fact.js');
