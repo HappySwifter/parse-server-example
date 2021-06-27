@@ -37,6 +37,9 @@ async function userHasRole(userId, roleName) {
       });
 }
 
+
+
+
 // Parse.Cloud.define('addNoteRating', function(request, response) {
 //   Objects.save(null, {
 //     useMasterKey: true,

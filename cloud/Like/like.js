@@ -1,12 +1,6 @@
 const habitTools = require('../Habit/Habit.js');
 const likeTools = require('./LikeTools.js');
 
-Parse.Cloud.define('getChecklist', async req => {
-    const user = req.user.id
-    console.log('fetch checklist for user', user)
-    return await likeTools.fetchChecklist(user)
-})
-
 
 Parse.Cloud.define('likeHabit', async req => {
     console.time("Parse.Cloud -> likeHabit")
@@ -14,7 +8,6 @@ Parse.Cloud.define('likeHabit', async req => {
     const user = req.user
     console.log('-->> req.user: ', user);
     console.log('-->> req.habit: ', habit);
-
     // await likeTools.canLikeHabit(user, habit)
     await likeTools.createLike(habit, user, req.params.frequency)
     const habitQuery = habitTools.constructHabitQuery(req.params.habit.objectId)

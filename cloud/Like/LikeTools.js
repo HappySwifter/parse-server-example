@@ -1,4 +1,4 @@
-module.exports = { canLikeHabit, createLike, removeLike, getOneLike, fetchChecklist };
+module.exports = { canLikeHabit, createLike, removeLike, getOneLike };
 
 
 /**
@@ -18,6 +18,12 @@ function getLikeACL(user) {
 
 }
 
+/**
+ @deprecated Проверка может ли юзер лайкнуть привычку или он это уже сделал. Устаревший метод. Проверка теперь выполняется на уровне БД
+ * @param user
+ * @param habit
+ * @returns {Promise<void>}
+ */
 async function canLikeHabit(user, habit) {
     const query = new Parse.Query('Checklist');
     query.equalTo('user', user);
@@ -37,66 +43,6 @@ async function getOneLike(user, habit) {
     return await query.first({ useMasterKey: true });
 }
 
-async function fetchChecklist(user) {
-    console.time('fetch checklist');
-    const pipeline = [
-        {
-            // match: {
-            //     _p_user: '_User$zq310K5K2D'
-            // },
-            lookup: {
-                from: 'HabitFact',
-                let: {
-                    'checklistHabitId': { $substr: ["$_p_habit", 6, -1] },
-                    'checklistUser': { $substr: ["$_p_user", 6, -1] }
-                },
-                pipeline: [
-                    {
-                        '$project': {
-                            'foreignHabit': { $substr: ["$_p_habit", 6, -1] },
-                            'lastFactDate': "$_created_at",
-                            'foreignUser': { $substr: ["$_p_user", 6, -1] }
-                        }
-                    },
-                    {
-                        '$match': {
-                            '$and': [
-                                { '$expr': { '$eq': ['$$checklistHabitId', '$foreignHabit'] } },
-                                { '$expr': { '$eq': ['$$checklistUser', '$foreignUser'] } }
-                            ]
-                        }
-                    },
-                    { '$sort': { 'lastFactDate': -1 } },
-                    // { '$limit': 1 },
-                    { '$project': { '_id': 0, 'lastFactDate': 1 } }
-                ],
-                as: 'facts'
-            },
-        },
-        {
-            replaceRoot: {
-                newRoot: {
-                    $mergeObjects: [{ $arrayElemAt: ["$facts", 0] }, "$$ROOT"]
-                }
-            }
-        },
-        { project: { facts: 0 } }
-    ]
-
-    const query = new Parse.Query("Checklist");
-    query.equalTo("user", user);
-    return await query.aggregate(pipeline, { userMasterKey: true })
-      .then( results => {
-          // console.log("res", results);
-          console.log('fetched checklist count:', results.length)
-          console.timeEnd('fetch checklist');
-          return results
-      })
-      .catch( error => {
-          throw error
-      });
-
-}
 
 /**
  * Создает новый лайк

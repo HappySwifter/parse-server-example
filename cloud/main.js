@@ -5,4 +5,8 @@ require('./Habit/Habit.js');
 require('./Habit/BeforeSaveHabit.js');
 
 require('./Like/like.js');
+require('./Like/GetChecklist.js');
 require('./Fact.js');
+
+
+require('./Challenge/GetChallenges');

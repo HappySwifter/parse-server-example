@@ -1,4 +1,5 @@
 const habitTools = require('./Habit/Habit.js');
+const dateTools = require('./DateTools.js');
 
 /**
  * Создать новый факт.
@@ -6,7 +7,8 @@ const habitTools = require('./Habit/Habit.js');
  * 2. Создает факт
  * 3. Устанавливает прва на факт
  * 4. Прибавляет к значению поля point у юзера поинты, которые указаны в привычке
- * 5. Делает aggregate запрос привычки (с лайком и датой факта) и отпавляем ее клиенту
+ // * 5. В таблице чеклист выставляет время исполнения факта
+ * 6. Делает aggregate запрос привычки (с лайком и датой факта) и отпавляем ее клиенту
  */
 Parse.Cloud.define('createFact', async (req) => {
     console.time("Parse.Cloud -> createFact")
@@ -15,7 +17,7 @@ Parse.Cloud.define('createFact', async (req) => {
     if ((facts.length === 0) || (facts.length > 0) && canCreate(facts[0].createdAt, habit.get("frequency"))) {
         let fact = await saveFact(habit, req.user)
         await updateUserPoints(fact.get("points"), req.user)
-
+        // await updateChecklist(fact, req.user)
         const habitQuery = habitTools.constructHabitQuery(req.params.habit.objectId)
         const habits = await habitTools.getHabitsForUser(req.user.id, habitQuery)
         console.timeEnd("Parse.Cloud -> createFact")
@@ -32,17 +34,6 @@ Parse.Cloud.define('createFact', async (req) => {
     requireUser: true
 });
 
-/**
- * Добавляет кол-во дней к дате
- * @param date дата, к оторой нужно прибавить дни
- * @param days кол-во дней, которое нужно прибавить
- * @returns {Date} обновленная дата
- */
-function addDays(date, days) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
 
 /**
  * Получить ACL для факта по переданному юзеру
@@ -101,7 +92,7 @@ function canCreate(createdAt, freq) {
     const currentDate = new Date()
     console.log('-->> fact.createdAt', createdAt);
     console.log('-->> current time', currentDate);
-    if (isToday(createdAt, currentDate)) {
+    if (dateTools.isToday(createdAt, currentDate)) {
         console.log('-->> can\'t create');
         return false;
     } else {
@@ -158,29 +149,22 @@ async function updateUserPoints(points, user) {
     console.timeEnd('updateUserPoints');
 }
 
-function isToday(date, currentDate) {
-    return date.getDate() === currentDate.getDate() &&
-      date.getMonth() === currentDate.getMonth() &&
-      date.getFullYear() === currentDate.getFullYear();
+async function updateChecklist(habitFact, user) {
+    const habit = habitFact.get('habit');
+    const checklistQuery = new Parse.Query('Checklist');
+    checklistQuery.equalTo('user', user);
+    checklistQuery.equalTo('habit', habit);
+    checklistQuery.limit(1);
+    await checklistQuery.first({ useMasterKey: true })
+      .then(function(checklist) {
+          if (checklist) {
+              const createdAt = habitFact.get('createdAt');
+              checklist.set('lastFactDate', createdAt);
+              console.log('-->> set lastCheckDate', createdAt, 'for', checklist);
+              checklist.save(null, { useMasterKey: true });
+          }
+      })
+      .catch(function(error) {
+          throw error;
+      });
 }
-
-// async function updateChecklist(habitFact, user) {
-//     const habit = habitFact.get('habit');
-//     const checklistQuery = new Parse.Query('Checklist');
-//     checklistQuery.equalTo('user', user);
-//     checklistQuery.equalTo('habit', habit);
-//     checklistQuery.limit(1);
-//     await checklistQuery.find({ useMasterKey: true })
-//       .then(function(results) {
-//
-//           results.some(function(checklist) {
-//               const createdAt = habitFact.get('createdAt');
-//               checklist.set('lastCheckDate', createdAt);
-//               console.log('-->> set lastCheckDate', createdAt, 'for', checklist);
-//               checklist.save(null, { useMasterKey: true });
-//           });
-//       })
-//       .catch(function(error) {
-//           throw error;
-//       });
-// }
