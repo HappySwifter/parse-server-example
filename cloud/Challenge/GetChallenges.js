@@ -43,6 +43,15 @@ async function getChallngessForUser(userId, query) {
 
     const pipeline = [
         {
+            match: {
+                $and:
+                  [
+                      { 'startDate': { '$lt': new Date() } },
+                      { 'finishDate': { '$gt': new Date() } },
+                  ]
+            }
+        },
+        {
             lookup: {
                 'from': 'UserChallenge',
                 'let': {
@@ -79,7 +88,7 @@ async function getChallngessForUser(userId, query) {
                                 }, {
                                     '$expr': {
                                         '$eq': [
-                                            'zq310K5K2D', '$user'
+                                            userId, '$user'
                                         ]
                                     }
                                 }
@@ -129,6 +138,7 @@ async function getChallngessForUser(userId, query) {
                         '$project': {
                             '_id': 0,
                             'habitId': 1,
+                            'points': 1,
                             'targetDate': 1
                         }
                     }

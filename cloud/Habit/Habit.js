@@ -39,6 +39,7 @@ async function getHabitsForUnauthorisedUser(query) {
     });
 }
 
+
 async function getHabitsForUser(userId, query) {
     console.time('fetch habits');
     const pipeline = [
@@ -65,6 +66,38 @@ async function getHabitsForUser(userId, query) {
                     { '$project': { '_id': 0, 'isLiked': 1 } } // оставляем только поле isLiked
                 ],
                 as: 'checklist'
+            }
+        },
+        {
+            lookup: {
+                from: 'Habit2Challenge',
+                'let': {
+                    'habitId': '$_id'
+                },
+                pipeline: [
+                    {
+                        '$set': {
+                            foreignHabit: {
+                                $substr: [
+                                    '$_p_habit',
+                                    6,
+                                    -1
+                                ]
+                            },
+                        }
+                    },
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: [
+                                    '$$habitId',
+                                    '$foreignHabit'
+                                ]
+                            }
+                        }
+                    },
+                ],
+                as: 'challenges'
             }
         },
         // {
@@ -106,7 +139,7 @@ async function getHabitsForUser(userId, query) {
 
     return await query.aggregate(pipeline, { userMasterKey: true })
       .then( results => {
-          // console.log("res", results);
+          console.log("res", results);
           console.timeEnd('fetch habits');
           return results
       })
