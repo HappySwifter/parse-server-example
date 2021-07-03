@@ -44,8 +44,8 @@ function getFactACL(user) {
     const acl = new Parse.ACL();
     acl.setReadAccess(user, true);
     acl.setWriteAccess(user, true);
-    acl.publicRead = false;
-    acl.publicWrite = false;
+    acl.setPublicReadAccess(false)
+    acl.setPublicWriteAccess(false)
     acl.setRoleWriteAccess('adminRole', true);
     acl.setRoleReadAccess('adminRole', true);
     return acl;
@@ -149,22 +149,22 @@ async function updateUserPoints(points, user) {
     console.timeEnd('updateUserPoints');
 }
 
-async function updateChecklist(habitFact, user) {
-    const habit = habitFact.get('habit');
-    const checklistQuery = new Parse.Query('Checklist');
-    checklistQuery.equalTo('user', user);
-    checklistQuery.equalTo('habit', habit);
-    checklistQuery.limit(1);
-    await checklistQuery.first({ useMasterKey: true })
-      .then(function(checklist) {
-          if (checklist) {
-              const createdAt = habitFact.get('createdAt');
-              checklist.set('lastFactDate', createdAt);
-              console.log('-->> set lastCheckDate', createdAt, 'for', checklist);
-              checklist.save(null, { useMasterKey: true });
-          }
-      })
-      .catch(function(error) {
-          throw error;
-      });
-}
+// async function updateChecklist(habitFact, user) {
+//     const habit = habitFact.get('habit');
+//     const checklistQuery = new Parse.Query('Checklist');
+//     checklistQuery.equalTo('user', user);
+//     checklistQuery.equalTo('habit', habit);
+//     checklistQuery.limit(1);
+//     await checklistQuery.first({ useMasterKey: true })
+//       .then(function(checklist) {
+//           if (checklist) {
+//               const createdAt = habitFact.get('createdAt');
+//               checklist.set('lastFactDate', createdAt);
+//               console.log('-->> set lastCheckDate', createdAt, 'for', checklist);
+//               checklist.save(null, { useMasterKey: true });
+//           }
+//       })
+//       .catch(function(error) {
+//           throw error;
+//       });
+// }

@@ -1,4 +1,4 @@
-module.exports = { canLikeHabit, createLike, removeLike, getOneLike };
+module.exports = { createLike, removeLike, getOneLike };
 
 
 /**
@@ -10,12 +10,11 @@ function getLikeACL(user) {
     const acl = new Parse.ACL();
     acl.setReadAccess(user, true);
     acl.setWriteAccess(user, true);
-    acl.publicRead = false;
-    acl.publicWrite = false;
+    acl.setPublicReadAccess(false)
+    acl.setPublicWriteAccess(false)
     acl.setRoleWriteAccess('adminRole', true);
     acl.setRoleReadAccess('adminRole', true);
     return acl;
-
 }
 
 /**
@@ -24,16 +23,16 @@ function getLikeACL(user) {
  * @param habit
  * @returns {Promise<void>}
  */
-async function canLikeHabit(user, habit) {
-    const query = new Parse.Query('Checklist');
-    query.equalTo('user', user);
-    query.equalTo('habit', habit);
-    query.limit(1);
-    const count = await query.count({ useMasterKey: true });
-    if (count > 0) {
-        throw 'Вы уже лайкнули эту привычку';
-    }
-}
+// async function canLikeHabit(user, habit) {
+//     const query = new Parse.Query('Checklist');
+//     query.equalTo('user', user);
+//     query.equalTo('habit', habit);
+//     query.limit(1);
+//     const count = await query.count({ useMasterKey: true });
+//     if (count > 0) {
+//         throw 'Вы уже лайкнули эту привычку';
+//     }
+// }
 
 async function getOneLike(user, habit) {
     const query = new Parse.Query('Checklist');
@@ -67,7 +66,6 @@ async function createLike(habit, user, frequency) {
     }, (error) => {
         throw error;
     });
-
 }
 
 async function removeLike(checklist) {

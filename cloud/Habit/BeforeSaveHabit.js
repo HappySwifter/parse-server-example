@@ -6,7 +6,7 @@ Parse.Cloud.beforeSave('Habit', async (req, res) => {
         throw 'Нужно авторизоваться для создания новой привычки'
     }
     else {
-        await functionTools.userHasRole(user.id, 'adminRole') // ex: check if user has "super" role
+        await functionTools.userHasRole(user.id, 'adminRole') // ex: check if user has "adminRole"
           .then(function(hasRole){
                 if(hasRole){
 

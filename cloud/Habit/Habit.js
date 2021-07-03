@@ -75,7 +75,7 @@ async function getHabitsForUser(userId, query) {
 
     return await query.aggregate(pipeline, { userMasterKey: true })
       .then( results => {
-          console.log("res", results);
+          // console.log("res", results);
           console.timeEnd('fetch habits');
           return results
       })

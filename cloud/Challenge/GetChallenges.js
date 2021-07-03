@@ -1,8 +1,11 @@
+module.exports = { getAggregationPipeline, constructChallengesQuery, getChallengesForUser };
+
 
 Parse.Cloud.define('getChallenges', async req => {
     const challengeId = req.params.challengeId
+    const user = req.user
     const query = constructChallengesQuery(challengeId)
-    const pipeline = getAggregationPipeline(req)
+    const pipeline = getAggregationPipeline(user)
     return await getChallengesForUser(pipeline, query)
 
 }, {
@@ -36,7 +39,7 @@ function constructChallengesQuery(challengeId) {
 //     });
 // }
 
-function getAggregationPipeline(req) {
+function getAggregationPipeline(user) {
     const datesMatchStage = {
         match: { $and:
               [
@@ -96,7 +99,7 @@ function getAggregationPipeline(req) {
     }
 
 
-    if (req.user === undefined) {
+    if (user === undefined) {
         return [
             datesMatchStage,
             hab2chalStage
@@ -104,7 +107,7 @@ function getAggregationPipeline(req) {
     } else {
          return [
             datesMatchStage,
-             getIsParticipatingStage(req.user.id),
+             getIsParticipatingStage(user.id),
             replaceUserChalStage,
             removeUserChalStage,
             hab2chalStage

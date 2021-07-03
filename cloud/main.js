@@ -9,4 +9,11 @@ require('./Like/GetChecklist.js');
 require('./Fact.js');
 
 
+// Challenges
+require('./Challenge/Hooks/BeforeSaveChallenge.js');
+require('./Challenge/Hooks/BeforSaveHabit2Challenge.js')
+
 require('./Challenge/GetChallenges');
+require('./Challenge/EnterChallenge');
+require('./Challenge/LeaveChallenge');
+
