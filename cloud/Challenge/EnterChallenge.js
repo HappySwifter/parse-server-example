@@ -11,9 +11,10 @@ Parse.Cloud.define('enterChallenge', async req => {
     const user = req.user
     console.log('-->> req.user: ', user);
     console.log('-->> req.challenge: ', challenge);
+    console.log('-->> req.challenge.id: ', challenge.objectId);
 
     await createUser2Challenge(challenge, user)
-    const challengeQuery = challengeTools.constructChallengesQuery(challenge.id)
+    const challengeQuery = challengeTools.constructChallengesQuery(challenge.objectId)
     const pipeline = challengeTools.getAggregationPipeline(user)
     const updatedChallenge = await challengeTools.getChallengesForUser(pipeline, challengeQuery)
     console.timeEnd("Parse.Cloud -> enterChallenge")

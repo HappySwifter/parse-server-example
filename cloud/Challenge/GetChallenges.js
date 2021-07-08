@@ -28,16 +28,6 @@ function constructChallengesQuery(challengeId) {
     return query
 }
 
-// async function getChallengesForUnauthorisedUser(query) {
-//     query.limit(1000)
-//     console.time('fetch challenge no user');
-//     return await query.find({ useMasterKey: true }).then( challenges => {
-//         console.timeEnd('fetch challenge no user');
-//         return challenges
-//     }).catch( error => {
-//         throw error
-//     });
-// }
 
 function getAggregationPipeline(user) {
     const datesMatchStage = {
@@ -48,8 +38,6 @@ function getAggregationPipeline(user) {
               ]
         }
     }
-
-
 
     const replaceUserChalStage = {
         replaceRoot: {
@@ -69,40 +57,11 @@ function getAggregationPipeline(user) {
         project: { 'userChallenge': 0 }
     }
 
-    const hab2chalStage = {
-        lookup: {
-            'from': 'Habit2Challenge',
-            'let': {
-                'challengeId': '$_id'
-            },
-            'pipeline': [
-                {
-                    '$match': {
-                        '$expr': {
-                            '$eq': [
-                                '$$challengeId', { '$substr': [ '$_p_challenge', 10, -1 ] }
-                            ]
-                        }
-                    }
-                },
-                {
-                    '$project': {
-                        'habitId': { '$substr': [ '$_p_habit', 6, -1 ] },
-                        'points': 1,
-                        'targetDate': 1,
-                        'objectId': '$_id'
-                    }
-                }
-            ],
-            'as': 'habits'
-        }
-    }
-
 
     if (user === undefined) {
         return [
             datesMatchStage,
-            hab2chalStage
+            getHabit2ChallengeStage()
         ]
     } else {
          return [
@@ -110,7 +69,7 @@ function getAggregationPipeline(user) {
              getIsParticipatingStage(user.id),
             replaceUserChalStage,
             removeUserChalStage,
-            hab2chalStage
+             getHabit2ChallengeStageForUser(user.id)
         ]
     }
 }
@@ -145,12 +104,173 @@ function getIsParticipatingStage(userId) {
     }
 }
 
+function getHabit2ChallengeStage() {
+    return {
+        lookup: {
+            'from': 'Habit2Challenge',
+            'let': {
+                'challengeId': '$_id'
+            },
+            'pipeline': [
+                {
+                    '$match': {
+                        '$expr': {
+                            '$eq': [
+                                '$$challengeId', { '$substr': [ '$_p_challenge', 10, -1 ] }
+                            ]
+                        }
+                    }
+                },
+                {
+                    '$project': {
+                        'habitId': { '$substr': [ '$_p_habit', 6, -1 ] },
+                        'points': 1,
+                        'targetDate': 1,
+                        'objectId': '$_id'
+                    }
+                }
+            ],
+            'as': 'habits'
+        }
+    }
+}
+
+function getHabit2ChallengeStageForUser(userId) {
+    return {
+        lookup: {
+            from: 'Habit2Challenge',
+            'let': {
+                challengeId: '$_id'
+            },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: [
+                                '$$challengeId',
+                                {
+                                    $substr: [
+                                        '$_p_challenge',
+                                        10,
+                                        -1
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        targetDate: 1,
+                        points: 1,
+                        habitId: {
+                            $substr: [
+                                '$_p_habit',
+                                6,
+                                -1
+                            ]
+                        },
+                        challenges: 1,
+                        targetDay: {
+                            $dateToString: {
+                                format: '%d-%m-%Y',
+                                date: '$targetDate'
+                            }
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'HabitFact',
+                        'let': {
+                            habitId: '$habitId',
+                            targetDay: '$targetDay'
+                        },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            {
+                                                $eq: [
+                                                    '$$habitId',
+                                                    {
+                                                        $substr: [
+                                                            '$_p_habit',
+                                                            6,
+                                                            -1
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                $eq: [
+                                                    userId,
+                                                    { $substr: [ '$_p_user', 6, -1 ] }
+                                                ]
+                                            },
+                                            {
+                                                $eq: [
+                                                    '$$targetDay',
+                                                    {
+                                                        $dateToString: {
+                                                            format: '%d-%m-%Y',
+                                                            date: '$_created_at'
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $limit: 1
+                            },
+                            {
+                                $addFields: {
+                                    isCompleted: true,
+                                }
+                            }
+                        ],
+                        as: 'facts'
+                    }
+                },
+                {
+                    $addFields: {
+                        isCompleted: {
+                            $first: '$facts.isCompleted'
+                        },
+                        objectId: '$_id',
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        facts: 0,
+                        targetDay: 0
+                    }
+                }
+            ],
+            as: 'habits'
+        }
+    }
+}
+
 async function getChallengesForUser(pipeline, query) {
     console.time('fetch challenges');
 
     return await query.aggregate(pipeline, { userMasterKey: true })
       .then( results => {
           console.timeEnd('fetch challenges');
+
+
+          results.forEach(function(result) {
+              console.log(result.habits)
+          });
+
+
           return results
       })
       .catch( error => {
