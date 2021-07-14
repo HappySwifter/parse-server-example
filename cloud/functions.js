@@ -1,11 +1,11 @@
 module.exports = { userHasRole }
 
 Parse.Cloud.define('isAdmin', async function(request, response){
-    console.log(request)
-    if (!request.user) {
-        throw 'Request did not have an authenticated user attached with it';
-    }
-    else {
+    // console.log(request)
+    // if (!request.user) {
+    //     throw 'Request did not have an authenticated user attached with it';
+    // }
+    // else {
         return await userHasRole(request.user.id, 'adminRole')
           .then(function(hasRole) {
                 return !!hasRole;
@@ -13,8 +13,12 @@ Parse.Cloud.define('isAdmin', async function(request, response){
             function(error){
                 throw error
             });
-    }
-});
+    // }
+},
+  {
+      requireUser: true
+  }
+);
 
 async function userHasRole(userId, roleName) {
     const queryRole = new Parse.Query(Parse.Role);

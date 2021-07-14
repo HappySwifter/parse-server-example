@@ -48,10 +48,8 @@ async function getHabitsForUser(userId, query) {
                 from: 'Checklist',
                 let: { 'habitId': '$_id' }, // определяем локальную переменную
                 pipeline: [
-                    { '$addFields': { 'isLiked': true } }, // добавляем новое поле в объект checklist, чтобы потом его вернуть
                     { '$project': {
                             'foreignHabit': { $substr: ["$_p_habit", 6, -1] }, // у чеклиста у поля _p_habit обрезаем ненужные символы и переименовываем его в foreignHabit
-                            'isLiked': 1, // оставляем поле isLiked для показа
                             'user': { $substr: ["$_p_user", 6, -1] }
                         }
                     },
@@ -63,7 +61,7 @@ async function getHabitsForUser(userId, query) {
                         }
                     },
                     { '$limit': 1 }, // возвращаем только одно значение
-                    { '$project': { '_id': 0, 'isLiked': 1 } } // оставляем только поле isLiked
+                    { '$set': { 'isLiked': true } }
                 ],
                 as: 'checklist'
             }

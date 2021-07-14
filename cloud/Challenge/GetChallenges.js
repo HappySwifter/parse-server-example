@@ -238,20 +238,14 @@ function getHabit2ChallengeStageForUser(userId) {
                     }
                 },
                 {
-                    $addFields: {
+                    $set: {
                         isCompleted: {
                             $first: '$facts.isCompleted'
                         },
                         objectId: '$_id',
                     }
                 },
-                {
-                    $project: {
-                        _id: 0,
-                        facts: 0,
-                        targetDay: 0
-                    }
-                }
+                { $unset: ['_id', 'facts', 'targetDay'] }
             ],
             as: 'habits'
         }
@@ -265,10 +259,11 @@ async function getChallengesForUser(pipeline, query) {
       .then( results => {
           console.timeEnd('fetch challenges');
 
-
-          results.forEach(function(result) {
-              console.log(result.habits)
-          });
+          console.log('DATE', new Date())
+          console.log(results)
+          // results.forEach(function(result) {
+          //     console.log(result.habits)
+          // });
 
 
           return results
