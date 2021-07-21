@@ -54,7 +54,7 @@ function getAggregationPipeline(user) {
     }
 
     const removeUserChalStage = {
-        project: { 'userChallenge': 0 }
+        project: { 'userChallenge': 0, 'isClosed': 0 }
     }
 
 

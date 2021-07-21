@@ -66,7 +66,12 @@ async function getHabitsForUser(userId, query) {
                 as: 'checklist'
             }
         },
-        { addFields: { isLiked: { '$first': '$checklist.isLiked' }  } },
+        { addFields: {
+                isLiked: { '$first': '$checklist.isLiked' },
+                __type: "Object",
+                className: "Habit"
+            }
+        },
         { project: { checklist: 0 } }
     ]
 
