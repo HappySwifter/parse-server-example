@@ -59,7 +59,7 @@ async function createLike(habit, user, frequency) {
 
     await checklist.save({
         user: user,
-        habit: habit,
+        habit: { __type: 'Pointer', className: 'Habit', objectId: habit },
         frequency: frequency,
     }).then(() => {
         console.log('-->> Like saved');
