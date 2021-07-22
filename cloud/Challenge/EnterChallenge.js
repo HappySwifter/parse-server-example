@@ -7,22 +7,22 @@ const challengeTools = require('./GetChallenges');
 Parse.Cloud.define('enterChallenge', async req => {
     console.time("Parse.Cloud -> enterChallenge")
 
-    const challenge = req.params.challenge
+    const challengeId = req.params.challengeId
     const user = req.user
     console.log('-->> req.user: ', user);
-    console.log('-->> req.challenge: ', challenge);
-    console.log('-->> req.challenge.id: ', challenge.objectId);
+    console.log('-->> req.challengeId: ', challengeId);
 
-    await createUser2Challenge(challenge, user)
-    const challengeQuery = challengeTools.constructChallengesQuery(challenge.objectId)
+    await createUser2Challenge(challengeId, user)
+    const challengeQuery = challengeTools.constructChallengesQuery(challengeId)
     const pipeline = challengeTools.getAggregationPipeline(user)
     const updatedChallenge = await challengeTools.getChallengesForUser(pipeline, challengeQuery)
     console.timeEnd("Parse.Cloud -> enterChallenge")
     return updatedChallenge[0]
   }, {
       fields: {
-          challenge: {
+          challengeId: {
               required: true,
+              type: String
           },
       },
       requireUser: true
@@ -48,11 +48,11 @@ function getUserChallengeACL(user) {
 
 /**
  * Creates new UserChallenge document
- * @param challenge challenge
+ * @param challengeId id of challenge
  * @param user user
  * @returns UserChallenge created challenge
  */
-async function createUser2Challenge(challenge, user) {
+async function createUser2Challenge(challengeId, user) {
 
     const UserChallenge = Parse.Object.extend('UserChallenge');
     const userChallenge = new UserChallenge();
@@ -61,7 +61,7 @@ async function createUser2Challenge(challenge, user) {
 
     const obj = await userChallenge.save({
         user: user,
-        challenge: challenge
+        challenge: { __type: 'Pointer', className: 'Challenge', objectId: challengeId }
     })
     console.log('-->> userChallenge saved');
     return obj

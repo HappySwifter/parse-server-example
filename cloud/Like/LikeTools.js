@@ -18,26 +18,15 @@ function getLikeACL(user) {
 }
 
 /**
- @deprecated Проверка может ли юзер лайкнуть привычку или он это уже сделал. Устаревший метод. Проверка теперь выполняется на уровне БД
+ Get one like
  * @param user
  * @param habit
- * @returns {Promise<void>}
+ * @returns Checklist
  */
-// async function canLikeHabit(user, habit) {
-//     const query = new Parse.Query('Checklist');
-//     query.equalTo('user', user);
-//     query.equalTo('habit', habit);
-//     query.limit(1);
-//     const count = await query.count({ useMasterKey: true });
-//     if (count > 0) {
-//         throw 'Вы уже лайкнули эту привычку';
-//     }
-// }
-
-async function getOneLike(user, habit) {
+async function getOneLike(user, habitId) {
     const query = new Parse.Query('Checklist');
     query.equalTo('user', user);
-    query.equalTo('habit', habit);
+    query.equalTo('habit', { __type: 'Pointer', className: 'Habit', objectId: habitId });
     query.limit(1);
     return await query.first({ useMasterKey: true });
 }
@@ -50,7 +39,7 @@ async function getOneLike(user, habit) {
  * @param frequency частота выполнения
  * @returns возвращает созданный факт
  */
-async function createLike(habit, user, frequency) {
+async function createLike(habitId, user, frequency) {
 
     const Checklist = Parse.Object.extend('Checklist');
     const checklist = new Checklist();
@@ -59,7 +48,7 @@ async function createLike(habit, user, frequency) {
 
     await checklist.save({
         user: user,
-        habit: { __type: 'Pointer', className: 'Habit', objectId: habit },
+        habit: { __type: 'Pointer', className: 'Habit', objectId: habitId },
         frequency: frequency,
     }).then(() => {
         console.log('-->> Like saved');

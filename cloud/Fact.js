@@ -12,14 +12,17 @@ const dateTools = require('./DateTools.js');
  */
 Parse.Cloud.define('createFact', async (req) => {
     console.time("Parse.Cloud -> createFact")
-    let habit = await fetchHabit(req.params.habit.objectId)
-    let facts = await findLastFact(req.user, habit)
+    const habitId = req.params.habitId
+    const user = req.user
+
+    let habit = await fetchHabit(habitId)
+    let facts = await findLastFact(user, habit)
     if ((facts.length === 0) || (facts.length > 0) && canCreate(facts[0].createdAt, habit.get("frequency"))) {
-        let fact = await saveFact(habit, req.user)
-        await updateUserPoints(fact.get("points"), req.user)
+        let fact = await saveFact(habit, user)
+        await updateUserPoints(fact.get("points"), user)
         // await updateChecklist(fact, req.user)
-        const habitQuery = habitTools.constructHabitQuery(req.params.habit.objectId)
-        const habits = await habitTools.getHabitsForUser(req.user.id, habitQuery)
+        const habitQuery = habitTools.constructHabitQuery(habitId)
+        const habits = await habitTools.getHabitsForUser(user.id, habitQuery)
         console.timeEnd("Parse.Cloud -> createFact")
         return habits[0]
     } else {
@@ -27,8 +30,9 @@ Parse.Cloud.define('createFact', async (req) => {
     }
 }, {
     fields: {
-        habit: {
-            required: true
+        habitId: {
+            required: true,
+            type: String
         }
     },
     requireUser: true
