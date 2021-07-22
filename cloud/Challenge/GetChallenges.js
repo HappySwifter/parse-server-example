@@ -57,19 +57,28 @@ function getAggregationPipeline(user) {
         project: { 'userChallenge': 0, 'isClosed': 0 }
     }
 
+    const addTypeStage = {
+        addFields: {
+            __type: "Object",
+            className: "Challenge"
+        }
+    }
+
 
     if (user === undefined) {
         return [
             datesMatchStage,
-            getHabit2ChallengeStage()
+            getHabit2ChallengeStage(),
+            addTypeStage
         ]
     } else {
          return [
-            datesMatchStage,
+             datesMatchStage,
              getIsParticipatingStage(user.id),
-            replaceUserChalStage,
-            removeUserChalStage,
-             getHabit2ChallengeStageForUser(user.id)
+             replaceUserChalStage,
+             removeUserChalStage,
+             getHabit2ChallengeStageForUser(user.id),
+             addTypeStage
         ]
     }
 }

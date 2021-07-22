@@ -62,6 +62,11 @@ async function fetchChecklist(query) {
                 }
             }
         },
+        { addFields: {
+                __type: "Object",
+                className: "Checklist"
+            }
+        },
         { project: { facts: 0 } }
     ]
 
